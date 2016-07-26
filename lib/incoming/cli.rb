@@ -9,6 +9,7 @@ require "incoming/cli/version"
 require "incoming/cli/config"
 require "incoming/cli/helper"
 require "incoming/cli/inpoint"
+require "incoming/cli/account"
 
 module Incoming
   module Cli
@@ -52,8 +53,11 @@ module Incoming
         end
       end
 
-      desc "inpoint SUBCOMMAND ...ARGS", "manage inpoint"
+      desc "inpoint SUBCOMMAND ...ARGS", "manage inpoints"
       subcommand "inpoint", Inpoint
+
+      desc "account SUBCOMMAND ...ARGS", "manage accounts"
+      subcommand "account", Account
     end
 
   end
