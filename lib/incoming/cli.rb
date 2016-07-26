@@ -10,11 +10,14 @@ require "incoming/cli/config"
 require "incoming/cli/helper"
 require "incoming/cli/inpoint"
 require "incoming/cli/account"
+require "incoming/cli/profile"
 
 module Incoming
   module Cli
 
     class Main < Thor
+      include Helper
+
       desc "hello NAME", "This will greet you"
       long_desc <<-HELLO_WORLD
 
@@ -36,18 +39,16 @@ module Incoming
       end
 
       desc 'login', 'Login to incominghq.com'
+      method_option :profile, type: :string, aliases: '-p'
       def login
         email = ask "email: "
         password = ask "password: ", echo: false
 
-        client_options = {email_and_password: { username: email, password: password }}
-        if Cli.config.url_options
-          client_options[:url_options] = Cli.config.url_options.dup
-        end
-        client = Incoming::Client.new(client_options)
+        auth = {email_and_password: { username: email, password: password }}
+        client = create_incoming_client(auth)
         response = client.create_session
         if token = response.body['jwt']
-          Cli.config.token = token
+          current_profile.token = token
           Cli.write_config
           say "\nLogin successful"
         end
@@ -58,6 +59,9 @@ module Incoming
 
       desc "account SUBCOMMAND ...ARGS", "manage accounts"
       subcommand "account", Account
+
+      desc "profile SUBCOMMAND ...ARGS", "manage profiles"
+      subcommand "profile", Profile
     end
 
   end

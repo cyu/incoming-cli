@@ -1,3 +1,4 @@
+require 'logger'
 require "incoming"
 
 module Incoming
@@ -5,15 +6,16 @@ module Incoming
 
     class ClientProxy < SimpleDelegator
 
-      def initialize(helper)
+      def initialize(helper, profile)
         super(helper.create_incoming_client)
         @_helper = helper
+        @_profile = profile
       end
 
       def _extend_session
         response = __getobj__.extend_session
         if response.status == 200
-          Cli.config.token = response.body['jwt']
+          @_profile.token = response.body['jwt']
           Cli.write_config
           __setobj__(@_helper.create_incoming_client)
         end
@@ -36,16 +38,47 @@ module Incoming
 
     module Helper
 
-      def incoming_client
-        @incoming_client ||= ClientProxy.new(self)
+      def set_profile
+        @current_profile = if name = options[:profile]
+          Cli.config.profiles[name.to_sym]
+        else
+          Cli.config.default_profile
+        end
       end
 
-      def create_incoming_client
-        client_opts = { auth_token: Cli.config.token } 
-        if Cli.config.url_options
-          client_opts[:url_options] = Cli.config.url_options.dup
+      def current_profile
+        @current_profile ||= begin
+          if name = options[:profile]
+            Cli.config.profiles[name.to_sym]
+          else
+            Cli.config.default_profile
+          end
         end
-        Incoming::Client.new(client_opts)
+      end
+
+      def incoming_client
+        @incoming_client ||= ClientProxy.new(self, current_profile)
+      end
+
+      def create_incoming_client(auth = nil)
+        client_opts = auth || { auth_token: current_profile.token } 
+        url_options = current_profile.to_url_options
+        unless url_options.empty?
+          client_opts[:url_options] = url_options
+        end
+        puts client_opts
+        client = Incoming::Client.new(client_opts)
+        puts current_profile.debug
+        if current_profile.debug
+          logger = Logger.new(STDOUT)
+          logger.level = Logger::DEBUG
+          client.logger = logger
+        end
+        client
+      end
+
+      def calculate_width(strings, label = '')
+        strings.map { |s| s ? s.length : 0 }.concat([label.length]).max
       end
 
     end
