@@ -11,6 +11,7 @@ require "incoming/cli/helper"
 require "incoming/cli/inpoint"
 require "incoming/cli/account"
 require "incoming/cli/profile"
+require "incoming/cli/instruction_set"
 
 module Incoming
   module Cli
@@ -59,6 +60,9 @@ module Incoming
 
       desc "account SUBCOMMAND ...ARGS", "manage accounts"
       subcommand "account", Account
+
+      desc "instruction_set SUBCOMMAND ...ARGS", "manage instruction sets"
+      subcommand "instruction_set", InstructionSet
 
       desc "profile SUBCOMMAND ...ARGS", "manage profiles"
       subcommand "profile", Profile
