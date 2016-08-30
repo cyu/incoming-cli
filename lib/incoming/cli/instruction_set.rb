@@ -28,30 +28,32 @@ module Incoming
         end
       end
 
-      desc "show NAME", "show a instruction set"
+      desc "info NAME", "show information on an instruction set"
       method_option :profile, type: :string, aliases: '-p'
-      def show(name)
+      method_option :inputs, type: :boolean
+      def info(name)
+        display_flags = [ :overview, :inputs, :content ]
+
+        if options[:inputs]
+          display_flags = [ :inputs ]
+        end
+
         instruction_set = incoming_client.get_instruction_set(name: name).body
-        table border: false do
-          keys = %w(name created_at)
-          name_width = calculate_width(keys)
-          value_width = calculate_width(keys.map { |k| instruction_set[k].to_s })
-          keys.each do |key|
-            row do
-              column key.upcase.gsub('_', ' '), width: name_width, bold: true
-              column instruction_set[key], width: value_width
-            end
+
+        if display_flags.include?  :overview
+          puts_attributes(instruction_set, *%w(id name created_at))
+        end
+
+        if display_flags.include?(:inputs) && inputs = instruction_set['inputs']
+          vertical_spacing 1
+          header title: "INPUTS", bold: true
+          inputs.each do |input|
+            puts "#{input['key']}"
           end
         end
 
-        if inputs = instruction_set['inputs']
-          vertical_spacing 2
-          header title: "INPUTS", bold: true
-          puts JSON.pretty_generate(inputs)
-        end
-
-        if content = instruction_set['content']
-          vertical_spacing 2
+        if display_flags.include?(:content) && content = instruction_set['content']
+          vertical_spacing 1
           header title: "INSTRUCTIONS", bold: true
           puts JSON.pretty_generate(content)
         end

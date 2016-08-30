@@ -19,6 +19,8 @@ module Incoming
     class Main < Thor
       include Helper
 
+      namespace :default
+
       desc "hello NAME", "This will greet you"
       long_desc <<-HELLO_WORLD
 

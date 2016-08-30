@@ -1,5 +1,6 @@
 require 'logger'
-require "incoming"
+require 'incoming'
+require 'active_support/core_ext/string/inflections'
 
 module Incoming
   module Cli
@@ -66,9 +67,7 @@ module Incoming
         unless url_options.empty?
           client_opts[:url_options] = url_options
         end
-        puts client_opts
         client = Incoming::Client.new(client_opts)
-        puts current_profile.debug
         if current_profile.debug
           logger = Logger.new(STDOUT)
           logger.level = Logger::DEBUG
@@ -79,6 +78,12 @@ module Incoming
 
       def calculate_width(strings, label = '')
         strings.map { |s| s ? s.length : 0 }.concat([label.length]).max
+      end
+
+      def puts_attributes(hash, *keys)
+        keys.each do |key|
+          puts "#{key.humanize}: #{hash[key]}"
+        end
       end
 
     end
