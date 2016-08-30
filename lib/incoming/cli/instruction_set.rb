@@ -59,6 +59,41 @@ module Incoming
         end
       end
 
+      desc "input INSTRUCTION_SET_NAME INPUT1[=DEFAULT] ...INPUT2[=DEFAULT]", "show/add/remove input(s) to an instruction set"
+      method_option :profile, type: :string, aliases: '-p'
+      method_option :add, type: :boolean, aliases: '-a'
+      method_option :remove, type: :boolean
+      def input(instruction_set, *inputs)
+        if options[:add]
+          resp = nil
+          inputs.each do |input|
+            key, default = input.split('=')
+            input_data = if default
+              { key: key, default: default }
+            else
+              { key: key }
+            end
+
+            resp = incoming_client.add_instruction_set_input(instruction_set: instruction_set, input: input_data)
+          end
+          puts resp.body
+
+        elsif options[:remove]
+          resp = nil
+          inputs.each do |key|
+            resp = incoming_client.remove_instruction_set_input(instruction_set: instruction_set, key: key)
+          end
+          puts resp.body
+
+        else
+          result = incoming_client.get_instruction_set(name: instruction_set).body
+          inputs = result['inputs'] || []
+          inputs.each do |input|
+            puts "#{input['key']}"
+          end
+        end
+      end
+      
     end
     
   end
